@@ -1,1 +1,1 @@
-java -cp bin;../bin/lij.jar helloworld.Main
+java -cp bin;../bin/jar/lij.jar helloworld.Main

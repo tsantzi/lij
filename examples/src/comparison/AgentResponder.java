@@ -50,6 +50,9 @@ public class AgentResponder implements ConstraintImplementor
 			try
 			{
 				input = JOptionPane.showInputDialog("Enter a value for responder " + id + "?");
+				if (input == null)
+					return false;
+		
 				Double dValue = Double.parseDouble(input);
 				Reply.setValue(dValue);
 			}

@@ -1,1 +1,1 @@
-java -cp bin;../bin/lij.jar comparison.Main
+java -cp bin;../bin/jar/lij.jar comparison.Main
