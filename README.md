@@ -23,7 +23,7 @@ This is an early, research release, so the bundled documentation on LCC is sever
 
 ##Why?
 
-This interpreter constitutes part of my PhD research. When work on this interpreter started, the only readily available Java-based LCC interpreter was the one integrated into the OpenKnowledge project (www.openk.org). However, the OpenKnowledge system is much more than a simple LCC interpreter. The downside of this is that it carries with it considerable overhead that is not necessary for the execution of simple, single-machine (i.e. not networked) LCC IMs. Hence the birth of LiJ.
+This interpreter constitutes part of my PhD research. When work on this interpreter started, the only readily available Java-based LCC interpreter was the one integrated into the OpenKnowledge project. However, the OpenKnowledge system is much more than a simple LCC interpreter. The downside of this is that it carries with it considerable overhead that is not necessary for the execution of simple, single-machine (i.e. not networked) LCC IMs. Hence the birth of LiJ.
 
 
 
