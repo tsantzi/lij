@@ -1,0 +1,590 @@
+/*******************************************************************************
+ * 
+ * LCC Grammar Definition for javacc
+ * 
+ * Author: Nikolaos Chatzinikolaou
+ * 
+ * Based on the OpenK LCC definition file by David Dupplaw & Paolo Besana
+ *
+ *******************************************************************************/
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Options
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+options
+{
+	STATIC = false ;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Parser definition
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+PARSER_BEGIN(Parser)
+	package lij.parser;
+
+	public class Parser
+	{
+		private lij.model.Framework  framework = new lij.model.Framework();
+
+		public lij.model.Framework getFramework()
+		{		
+			return framework;
+		}
+	}
+	
+PARSER_END(Parser)
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Lexical Analyser definition
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Skip spaces and newlines
+SKIP : { " " }
+SKIP : { "\t" | "\n" | "\r" | "\r\n" }
+
+// Skip comments
+SKIP :
+{
+	<"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")>
+|	<"/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+// Tokens
+TOKEN :
+{ 
+	<AGENT: "a">
+|	<ROLE: "r">
+|	<NULL: "null">
+|	<OR: "or">
+|	<THEN: "then"> 
+|	<AND: "and">
+|	<PAR: "par">
+|	<NECESSARY: "necessary">
+|	<INITIAL: "initial">
+|	<OPTIONAL: "optional">
+|	<AUXILIARY: "auxiliary">
+|	<CYCLIC: "cyclic">
+|	<UNCOMMITTED: "uncommitted">
+|	<BYREF: "&">
+}
+
+TOKEN : { <MESSAGEIN: "<="> }
+TOKEN : { <MESSAGEOUT: "=>"> }
+TOKEN : { <CONSTRAINT: "<-"> }
+TOKEN : { <CLAUSE: "::"> }
+TOKEN : { <LPAR: "("> }
+TOKEN : { <RPAR: ")"> }
+TOKEN : { <LSB: "["> }
+TOKEN : { <RSB: "]"> }
+TOKEN : { <COMMA: ","> }
+TOKEN : { <QUOTE: "\""> }
+TOKEN : { <SINGLEQUOTE: "'"> }
+TOKEN : { <LISTTAIL: "|"> }
+TOKEN : { <WILDCARD: "_"> }
+TOKEN : { <ASSIGN: "="> }
+TOKEN : { <GT: ">"> }
+TOKEN : { <LT: "<"> }
+TOKEN : { <EQ: "=="> }
+TOKEN : { <NEQ: "!="> }
+
+TOKEN :
+{
+	<VARIABLE: <CAPITAL> (<LETTER> | <DIGIT>)*> 
+|	<#CAPITAL: ["A"-"Z"]>
+| 	<#LETTER: ["$","A"-"Z","_","a"-"z"]>
+| 	<#DIGIT: ["0"-"9"]>
+}
+
+TOKEN :
+{
+	<CONSTANT: <NOTCAPITAL> (<CLETTER> | <CDIGIT>)*> 
+| 	<#NOTCAPITAL: ["$","_","a"-"z"]>
+| 	<#CLETTER: ["$","A"-"Z","_","a"-"z",":",".","@"]>
+| 	<#CDIGIT: ["0"-"9"]>
+}
+
+TOKEN :
+{
+	<INTEGER: <IDIGIT> (<IDIGIT>)*>
+|	<#IDIGIT: ["0"-"9"]>
+}
+
+TOKEN :
+{
+	<FLOATING_POINT_LITERAL: <DECIMAL_FLOATING_POINT_LITERAL> | <HEXADECIMAL_FLOATING_POINT_LITERAL>>
+|	<#DECIMAL_FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<DECIMAL_EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <DECIMAL_EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<DECIMAL_EXPONENT>)? ["f","F","d","D"]>
+	|	<#DECIMAL_EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+	|   <#HEXADECIMAL_FLOATING_POINT_LITERAL:
+        "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])+ (".")? <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?
+      | "0" ["x", "X"] (["0"-"9","a"-"f","A"-"F"])* "." (["0"-"9","a"-"f","A"-"F"])+ <HEXADECIMAL_EXPONENT> (["f","F","d","D"])?>
+|  <#HEXADECIMAL_EXPONENT: ["p","P"] (["+","-"])? (["0"-"9"])+ >
+}
+
+TOKEN :
+{
+	<STRINGLITERAL: "\"" ( ~["\"","\\","\n","\r"] | "\\" ( ["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])?  | ["0"-"3"] ["0"-"7"] ["0"-"7"] | ( ["\n","\r"] | "\r\n")))* "\"">
+}
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Parser specification
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void start() throws lij.exceptions.InterpreterException :
+{
+}
+{
+	(role())*
+	
+	(clause())*
+	
+	<EOF>
+}
+
+
+
+void role() throws lij.exceptions.InterpreterException :
+{
+	lij.model.Term roleName = null;
+	Token tRoleType = null;
+	Token tRoleMin = null;
+	Token tRoleMax = null;
+}
+{
+	<ROLE> <LPAR> roleName = term() <COMMA>
+	(tRoleType = <INITIAL> | tRoleType = <NECESSARY> | tRoleType = <OPTIONAL> | tRoleType = <AUXILIARY> | tRoleType = <CYCLIC> | tRoleType = <UNCOMMITTED>)
+	[ <COMMA> tRoleMin = <INTEGER> [ <COMMA> tRoleMax = <INTEGER> ] ] <RPAR>
+	{
+		String roleType = tRoleType.image;
+		int roleMin = (tRoleMin == null ? -1 : Integer.parseInt(tRoleMin.image));
+		int roleMax = (tRoleMax == null ? -1 : Integer.parseInt(tRoleMax.image));
+		lij.model.Role newRole = new lij.model.Role(roleName, roleType, roleMin, roleMax);
+		framework.addRole(newRole);
+	}
+}
+
+
+
+void clause() throws lij.exceptions.InterpreterException :
+{
+	lij.model.DefAgent agent = null;	
+	lij.parserutil.TreeFactory treeFactory = new lij.parserutil.TreeFactory();
+}
+{
+	agent = agent() <CLAUSE> clauseBlock(treeFactory)
+	{
+		lij.model.TreeNode clauseTreeRoot = treeFactory.createTreeRoot();
+		lij.model.Clause newClause = new lij.model.Clause(agent, clauseTreeRoot);	// Tree stack is purged in method createTreeRoot()
+
+		framework.addClause(newClause);
+	}
+}
+
+
+
+void clauseBlock(lij.parserutil.TreeFactory treeFactory) :
+{
+}
+{
+	clauseItem(treeFactory)
+	
+	(
+		<OR>
+		{
+			treeFactory.pushTreeNodeToken(new lij.model.Operator.Or());
+		}
+		clauseItem(treeFactory)
+	)*
+
+	[
+		<THEN>
+		{
+			treeFactory.pushTreeNodeToken(new lij.model.Operator.Then());
+		}
+		clauseBlock(treeFactory)
+	]
+}
+
+
+
+// Null operator, role switch or message
+void clauseItem(lij.parserutil.TreeFactory treeFactory) : 
+{
+	lij.model.Def def = null;
+}
+{
+	(
+		<LPAR>
+		{
+			treeFactory.pushTreeNodeToken(new lij.model.Operator.OpenParen());
+		}
+		
+		clauseBlock(treeFactory)
+		
+		<RPAR>
+		{
+			treeFactory.pushTreeNodeToken(new lij.model.Operator.CloseParen());
+		}
+	)
+
+	|
+	
+	def = def()
+	{
+		treeFactory.pushTreeNodeToken(def);
+	}
+}
+
+
+
+// Null operator, role switch or message
+lij.model.Def def() : 
+{
+	lij.model.Def def = null;
+	java.util.ArrayList<lij.model.Constraint> constraints = null;
+}
+{
+	(
+		def = agent()
+		|
+		def = message()
+		|
+		def = nullOp()
+	)
+
+	[
+		<CONSTRAINT> constraints = constraints()
+		{
+			def.setConstraints(constraints);
+		}
+	]
+
+	{
+		return def;
+	}
+}
+
+
+
+lij.model.DefAgent agent() :
+{
+	lij.model.Term type = null;
+	lij.model.Argument id = null;
+}
+{
+	<AGENT> <LPAR>
+	(
+		type = term()
+		
+		|
+		
+		<WILDCARD>
+	) 
+	<COMMA>
+	(
+		id = id()
+		
+		|
+		
+		<WILDCARD>
+	)
+	<RPAR>
+	{
+		return new lij.model.DefAgent(type, id);
+	}
+}
+
+
+
+lij.model.DefMessage message() : 
+{
+	lij.model.Term content = null;
+	lij.model.DefAgent participant = null;
+	boolean outgoing = false;
+}
+{
+	content = term()
+	
+	(
+		<MESSAGEIN>
+		{
+			outgoing = false;
+		}
+
+		|
+
+		<MESSAGEOUT>
+		{
+			outgoing = true;
+		}
+	)
+	
+	participant = agent()
+
+	{
+		return new lij.model.DefMessage(content, participant, outgoing);
+	}	
+}
+
+
+
+lij.model.DefNullOp nullOp() :
+{
+}
+{
+	<NULL>
+	{
+		return new lij.model.DefNullOp();
+	}
+}
+
+
+
+java.util.ArrayList<lij.model.Constraint> constraints() :
+{
+	lij.model.Constraint constraint = null;
+	java.util.ArrayList<lij.model.Constraint> constraints = new java.util.ArrayList<lij.model.Constraint>();
+}
+{
+	constraint = constraint()
+	{
+		constraints.add(constraint);
+	}
+
+	(
+		<AND> constraint = constraint()
+		{
+			constraints.add(constraint);
+		}
+	)*
+
+	{
+		return constraints;
+	}
+}
+
+
+
+lij.model.Constraint constraint() :
+{
+	lij.model.Constraint constraint = null;
+	lij.model.Term constraintMethodTerm = null;
+	lij.model.ArgumentVariable argument1;
+	lij.model.Argument argument2;
+	lij.model.ArgumentVariable head;
+	lij.model.ArgumentVariable tail;
+}
+{
+	constraintMethodTerm = term()
+	{
+		constraint = new lij.model.ConstraintMethod(constraintMethodTerm);
+		
+		return constraint;
+	}
+	
+	|
+
+	argument1 = argumentVariable()
+	(
+		<LT> argument2 = argument()
+		{
+			constraint = new lij.model.ConstraintComparison(lij.model.ConstraintComparison.Type.LESS_THAN, argument1, argument2);
+			return constraint;
+		}
+		
+		|
+		
+		<GT> argument2 = argument()
+		{
+			constraint = new lij.model.ConstraintComparison(lij.model.ConstraintComparison.Type.GREATER_THAN, argument1, argument2);
+			return constraint;
+		}
+		
+		|
+		
+		<EQ> argument2 = argument()
+		{
+			constraint = new lij.model.ConstraintComparison(lij.model.ConstraintComparison.Type.EQUAL_TO, argument1, argument2);
+			return constraint;
+		}
+		
+		|
+		
+		<NEQ> argument2 = argument()
+		{
+			constraint = new lij.model.ConstraintComparison(lij.model.ConstraintComparison.Type.NOT_EQUAL_TO, argument1, argument2);
+			return constraint;
+		}
+		
+		|
+		
+		<ASSIGN>
+		(
+			LOOKAHEAD(2)	// Choosing between X = [..., ..., ...] and X = [H | T]
+
+			argument2 = argument()
+			{
+				constraint = new lij.model.ConstraintAssignment(argument1, argument2);
+				return constraint;
+			}
+			
+			|
+			
+			<LSB> head = argumentVariable() <LISTTAIL> tail = argumentVariable() <RSB>
+			{
+				constraint = new lij.model.ConstraintList(argument1, head, tail);
+				return constraint;
+			}
+		)
+	)
+}
+
+
+
+// a, a(), a(X, Y, Z, ...) , a(x(X1, X2, ...), y(Y1, Y2, ...), z, ...) 
+lij.model.Term term() :
+{
+	Token tName = null;
+	lij.model.Argument argument = null;
+	java.util.ArrayList<lij.model.Argument> arguments = new java.util.ArrayList<lij.model.Argument>(); 
+}
+{
+	tName = <CONSTANT>
+	
+	[
+		<LPAR>
+		[			
+			argument = argument()
+			{
+				arguments.add(argument);
+			}
+			
+			(
+				(<COMMA> argument = argument())
+				{
+					arguments.add(argument);
+				}
+			)*
+		]
+		<RPAR>
+	]
+
+	{
+		return new lij.model.Term(tName.image, arguments);
+	}
+}
+
+
+
+lij.model.Argument argument() :
+{
+	lij.model.Argument argument = null;
+}
+{
+	(/* argument = term() | */ argument = argumentVariable() | argument = argumentValue())
+	{
+		return argument;
+	}
+}
+
+
+
+lij.model.ArgumentVariable argumentVariable() :
+{
+	Token tVariable = null;
+}
+{
+	tVariable = <VARIABLE>
+	{
+		return new lij.model.ArgumentVariable(tVariable.image);
+	}
+}
+
+
+
+lij.model.ArgumentValue argumentValue() :
+{
+	Token tValue = null;
+	lij.model.ArgumentValue argumentValue = null;
+	java.util.ArrayList<java.io.Serializable> list = new java.util.ArrayList<java.io.Serializable>(); 
+}
+{
+	// Static integer
+	tValue = <INTEGER>
+	{
+		Integer i = new Integer(tValue.image);
+		return new lij.model.ArgumentValue(i);
+	}
+
+	|
+
+	// Static double
+	tValue = <FLOATING_POINT_LITERAL>
+	{
+		Double d = new Double(tValue.image);
+		return new lij.model.ArgumentValue(d);
+	}
+
+	|
+
+	// Static string
+	tValue = <STRINGLITERAL>
+	{
+		String s = tValue.image.substring(1, tValue.image.length() - 1);	// Remove the quotes
+		return new lij.model.ArgumentValue(s);
+	}
+	
+	|
+	
+	// Static list
+	(
+		<LSB>
+		[
+			argumentValue = argumentValue()
+			{
+				list.add(argumentValue.getValue());
+			}
+		
+			(
+				<COMMA> argumentValue = argumentValue()
+				{
+					list.add(argumentValue.getValue());
+				}
+			)*
+		]
+		<RSB>
+	)
+	{
+		return new lij.model.ArgumentValue(list);
+	}
+}
+
+
+
+lij.model.Argument id() :
+{
+	lij.model.Argument argument = null;
+}
+{
+	(argument = argumentVariable() | argument = argumentValue())
+	{
+		return argument;
+	}
+}

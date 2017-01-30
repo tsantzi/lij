@@ -1,0 +1,34 @@
+<project default="all">
+
+    <path id="classpath">
+        <fileset dir="../bin/jar" includes="lij.jar" />
+    </path>
+    
+	<target name="all" depends="compile-comparison, compile-diningphilosophers, compile-helloworld, compile-ping"/>
+  
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+
+    <target name="compile-comparison">
+        <mkdir dir="bin/comparison"/>
+        <javac srcdir="src/comparison" destdir="bin" classpathref="classpath"/>
+    </target>
+
+    <target name="compile-diningphilosophers">
+        <mkdir dir="bin/diningphilosophers"/>
+        <javac srcdir="src/diningphilosophers" destdir="bin" classpathref="classpath"/>
+    </target>
+
+    <target name="compile-helloworld">
+        <mkdir dir="bin/helloworld"/>
+        <javac srcdir="src/helloworld" destdir="bin" classpathref="classpath"/>
+    </target>
+
+    <target name="compile-ping">
+        <mkdir dir="bin/ping"/>
+        <javac srcdir="src/ping" destdir="bin" classpathref="classpath"/>
+    </target>
+
+</project>
+
