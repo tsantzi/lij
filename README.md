@@ -17,7 +17,7 @@ This documentation is provisional. More complete information will (probably) app
 
 LiJ is an interpreter capable of executing Interaction Models (IMs) described in the Lightweight Coordination Calculus (LCC). It is written in Java, and supports external constraint method providers using a (very small!) number of Java interfaces.
 
-This is an early, research release, so the bundled documentation on LCC is severely lacking (read: non-existent). I assume that, if you're using this, you are familiar with LCC. If not, then for the time being you can get an idea by visiting the OpenKnowledge site at www.openk.org and reading the page at "The OK System" -> "Being an OK User" -> "Using LCC".
+This is an early, research release, so the bundled documentation on LCC is severely lacking (read: non-existent). I assume that, if you're using this, you are familiar with LCC. If not, then for the time being you can get an idea by visiting the OpenKnowledge site and reading the page at "The OK System" -> "Being an OK User" -> "Using LCC".
 
 
 
